@@ -1,0 +1,46 @@
+CREATE OR REPLACE VIEW surv.old_fv_surv_well_test
+AS SELECT DISTINCT cc.api_no14,
+    cc.well_name,
+    ii.well_test_date AS test_date,
+    max(ii.well_test_date) OVER (PARTITION BY cc.api_no14) AS last_test_date,
+    cc.op_area,
+    cc.reg_name,
+    cc.at_name,
+    cc.orglev4_name,
+    cc.currenttype,
+    cc.currentstatus,
+    ii.test_type,
+    ii.oil_rate,
+    ii.gas_rate,
+    ii.water_rate,
+    ii.gas_lift_rate,
+    ii.gas_oil_ratio,
+    ii.tubing_press,
+    ii.casing_press,
+    ii.line_press,
+    ii.allocatable,
+    ii.oil_gravity,
+    ii.choke_size,
+    ii.pump_eff,
+    ii.water_cut,
+    ii.stroke_length,
+    ii.strokes_minute,
+    ii.pump_bore_size,
+    ii.prod_hours,
+    ii.test_hours,
+    ii.hertz,
+    ii.amps,
+    ii.fluid_level,
+    ii.pump_intake_press,
+    ii.wellhead_temp,
+    ii.salinity,
+    ii.bsw
+   FROM crc.mv_bi_well_test ii
+     JOIN surv.mv_dv_wd_well_dictionary cc ON ii.api_no14 = cc.api_no14;
+
+-- Permissions
+
+ALTER TABLE surv.old_fv_surv_well_test OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_fv_surv_well_test TO postgres;
+GRANT SELECT ON TABLE surv.old_fv_surv_well_test TO web_anon;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_fv_surv_well_test TO data_quality;
