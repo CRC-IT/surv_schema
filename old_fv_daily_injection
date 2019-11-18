@@ -1,0 +1,76 @@
+CREATE OR REPLACE VIEW surv.old_fv_daily_injection
+AS WITH ii AS (
+         SELECT ods_oxy_injection_data.api_no14,
+            ods_oxy_injection_data.daily_inj_date AS test_date,
+            ods_oxy_injection_data.inj_fluid_type,
+            ods_oxy_injection_data.inj_rate,
+            ods_oxy_injection_data.inj_tubing_press,
+            ods_oxy_injection_data.inj_casing_press,
+            ods_oxy_injection_data.inj_static_press,
+            ods_oxy_injection_data.inj_diff_press,
+            ods_oxy_injection_data.inj_temp,
+            ods_oxy_injection_data.hours_inj,
+            ods_oxy_injection_data.desired_press,
+            ods_oxy_injection_data.desired_rate,
+            ods_oxy_injection_data.remarks,
+            ods_oxy_injection_data.header_press,
+            ods_oxy_injection_data.target_sp,
+            ods_oxy_injection_data.pressure_setpoint,
+            ods_oxy_injection_data.avg_inj_press,
+            NULL::numeric AS max_pressa
+           FROM ds_ekpspp.ods_oxy_injection_data
+        UNION
+         SELECT fv_ingres_daily_inj_la_basin.api_no14,
+            fv_ingres_daily_inj_la_basin.daily_inj_date AS test_date,
+            fv_ingres_daily_inj_la_basin.inj_fluid_type,
+            fv_ingres_daily_inj_la_basin.inj_rate,
+            fv_ingres_daily_inj_la_basin.inj_tubing_press,
+            fv_ingres_daily_inj_la_basin.inj_casing_press,
+            fv_ingres_daily_inj_la_basin.inj_static_press,
+            fv_ingres_daily_inj_la_basin.inj_diff_press,
+            fv_ingres_daily_inj_la_basin.inj_temp,
+            fv_ingres_daily_inj_la_basin.hours_inj,
+            fv_ingres_daily_inj_la_basin.desired_press,
+            fv_ingres_daily_inj_la_basin.desired_rate,
+            fv_ingres_daily_inj_la_basin.remarks,
+            fv_ingres_daily_inj_la_basin.header_press,
+            fv_ingres_daily_inj_la_basin.target_sp,
+            fv_ingres_daily_inj_la_basin.pressure_setpoint,
+            fv_ingres_daily_inj_la_basin.avg_inj_press,
+            fv_ingres_daily_inj_la_basin.max_press
+           FROM ingres.mv_fv_daily_inj_ingres fv_ingres_daily_inj_la_basin
+        )
+ SELECT cc.api_no14,
+    cc.well_name,
+    ii.test_date AS inj_date,
+    cc.op_area,
+    cc.reg_name,
+    cc.at_name,
+    cc.orglev4_name,
+    cc.currenttype,
+    cc.currentstatus,
+    ii.inj_fluid_type,
+    ii.inj_rate,
+    ii.inj_tubing_press,
+    ii.inj_casing_press,
+    ii.inj_static_press,
+    ii.inj_diff_press,
+    ii.inj_temp,
+    ii.hours_inj,
+    ii.desired_press,
+    ii.desired_rate,
+    ii.remarks,
+    ii.header_press,
+    ii.target_sp,
+    ii.pressure_setpoint,
+    ii.avg_inj_press,
+    ii.max_press
+   FROM ii
+     JOIN surv.mv_dv_wd_well_dictionary cc ON ii.api_no14 = cc.api_no14;
+
+-- Permissions
+
+ALTER TABLE surv.old_fv_daily_injection OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_fv_daily_injection TO postgres;
+GRANT SELECT ON TABLE surv.old_fv_daily_injection TO web_anon;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_fv_daily_injection TO data_quality;
