@@ -1,0 +1,155 @@
+CREATE OR REPLACE VIEW surv.old_fv_allocated_volumes
+AS SELECT DISTINCT mv_dv_av_allocated_cals.api_no14,
+    mv_dv_av_allocated_cals.well_name,
+    mv_dv_av_allocated_cals.allocated_date,
+    mv_dv_av_allocated_cals.op_area,
+    mv_dv_av_allocated_cals.reg_name,
+    mv_dv_av_allocated_cals.at_name,
+    mv_dv_av_allocated_cals.orglev4_name,
+    mv_dv_av_allocated_cals.currenttype,
+    mv_dv_av_allocated_cals.currentstatus,
+    mv_dv_av_allocated_cals.days_prod,
+    mv_dv_av_allocated_cals.days_inject,
+    mv_dv_av_allocated_cals.oil_prod,
+    mv_dv_av_allocated_cals.gas_prod,
+    mv_dv_av_allocated_cals.cond_prod,
+    mv_dv_av_allocated_cals.water_prod,
+    mv_dv_av_allocated_cals.gross_liq_prod,
+    mv_dv_av_allocated_cals.water_inj,
+    mv_dv_av_allocated_cals.gas_inj,
+    mv_dv_av_allocated_cals.disp_water_inj,
+    mv_dv_av_allocated_cals.cyclic_steam_inj,
+    mv_dv_av_allocated_cals.steam_inj,
+    mv_dv_av_allocated_cals.hrs_prod,
+    mv_dv_av_allocated_cals.hrs_inject,
+    mv_dv_av_allocated_cals.cdoil_prod,
+    mv_dv_av_allocated_cals.cdgross_liq_prod,
+    mv_dv_av_allocated_cals.cdcond_prod,
+    mv_dv_av_allocated_cals.cdgas_prod,
+    mv_dv_av_allocated_cals.cdwat_prod,
+    mv_dv_av_allocated_cals.cdgas_inj,
+    mv_dv_av_allocated_cals.cdwat_inj,
+    mv_dv_av_allocated_cals.cdsteam_inj,
+    mv_dv_av_allocated_cals.cdsteamc_inj,
+    mv_dv_av_allocated_cals.cddispwat_inj,
+    mv_dv_av_allocated_cals.ogr_prod,
+    mv_dv_av_allocated_cals.ocut_prod,
+    mv_dv_av_allocated_cals.glr_prod,
+    mv_dv_av_allocated_cals.gor_prod,
+    mv_dv_av_allocated_cals.wor_prod,
+    mv_dv_av_allocated_cals.wgr_prod,
+    mv_dv_av_allocated_cals.water_cut_prod,
+    mv_dv_av_allocated_cals.active_prod,
+    mv_dv_av_allocated_cals.active_winj,
+    mv_dv_av_allocated_cals.active_ginj,
+    mv_dv_av_allocated_cals.active_steam_inj,
+    mv_dv_av_allocated_cals.active_steamc_inj,
+    mv_dv_av_allocated_cals.active_wd,
+    mv_dv_av_allocated_cals.oil_cum,
+    mv_dv_av_allocated_cals.gas_cum,
+    mv_dv_av_allocated_cals.water_cum,
+    mv_dv_av_allocated_cals.gross_cum,
+    mv_dv_av_allocated_cals.water_inj_cum,
+    mv_dv_av_allocated_cals.gas_inj_cum,
+    mv_dv_av_allocated_cals.steam_inj_cum,
+    mv_dv_av_allocated_cals.steamc_inj_cum,
+    mv_dv_av_allocated_cals.disp_water_inj_cum,
+    min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14) AS firstproddate,
+    max(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14) AS lastproddate,
+    (date_part('month'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('month'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14)) + (date_part('year'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('year'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14))) * 12::double precision)::numeric AS month_norm,
+    floor(date_part('year'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date)))::numeric AS startyear,
+    (floor(date_part('year'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date)) / 10::double precision) * 10::double precision)::numeric AS startdecade,
+        CASE
+            WHEN (date_part('month'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('month'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14)) + (date_part('year'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('year'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14))) * 12::double precision) <= 6::double precision THEN max(mv_dv_av_allocated_cals.cdoil_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14, mv_dv_av_allocated_cals.allocated_date, mv_dv_av_allocated_cals.cdoil_prod)
+            ELSE NULL::numeric::double precision
+        END AS oil_ip,
+        CASE
+            WHEN (date_part('month'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('month'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14)) + (date_part('year'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('year'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14))) * 12::double precision) <= 6::double precision THEN max(mv_dv_av_allocated_cals.cdgas_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14, mv_dv_av_allocated_cals.allocated_date, mv_dv_av_allocated_cals.cdgas_prod)
+            ELSE NULL::numeric::double precision
+        END AS gas_ip,
+        CASE
+            WHEN (date_part('month'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('month'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14)) + (date_part('year'::text, mv_dv_av_allocated_cals.allocated_date) - date_part('year'::text, min(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14))) * 12::double precision) <= 6::double precision THEN max(mv_dv_av_allocated_cals.cdwat_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14, mv_dv_av_allocated_cals.allocated_date, mv_dv_av_allocated_cals.cdwat_prod)
+            ELSE NULL::numeric::double precision
+        END AS water_ip,
+    ceil(date_part('year'::text, now()) - date_part('year'::text, max(mv_dv_av_allocated_cals.allocated_date) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14)) + 0.00001::double precision)::numeric AS inactive_since_y,
+    mv_dv_av_allocated_cals.cdoil_prod - COALESCE(lag(mv_dv_av_allocated_cals.cdoil_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdoil_prod_var,
+    mv_dv_av_allocated_cals.cdgas_prod - COALESCE(lag(mv_dv_av_allocated_cals.cdgas_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdgas_prod_var,
+    mv_dv_av_allocated_cals.cdwat_prod - COALESCE(lag(mv_dv_av_allocated_cals.cdwat_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdwat_prod_var,
+    mv_dv_av_allocated_cals.cdgross_liq_prod - COALESCE(lag(mv_dv_av_allocated_cals.cdgross_liq_prod) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdgross_liq_prod_var,
+    mv_dv_av_allocated_cals.cdwat_inj - COALESCE(lag(mv_dv_av_allocated_cals.cdwat_inj) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdwat_inj_var,
+    mv_dv_av_allocated_cals.cdgas_inj - COALESCE(lag(mv_dv_av_allocated_cals.cdgas_inj) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdgas_inj_var,
+    mv_dv_av_allocated_cals.cdsteam_inj - COALESCE(lag(mv_dv_av_allocated_cals.cdsteam_inj) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdsteam_inj_var,
+    mv_dv_av_allocated_cals.cdsteamc_inj - COALESCE(lag(mv_dv_av_allocated_cals.cdsteamc_inj) OVER (PARTITION BY mv_dv_av_allocated_cals.api_no14 ORDER BY mv_dv_av_allocated_cals.allocated_date), 0::numeric::double precision) AS cdsteamc_inj_var,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'INJ'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdoil_prod::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdoil_prod::numeric
+            END), 2)
+        END AS log_cdoil_prod,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'INJ'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdgas_prod::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdgas_prod::numeric
+            END), 2)
+        END AS log_cdgas_prod,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'INJ'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdwat_prod::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdwat_prod::numeric
+            END), 2)
+        END AS log_cdwat_prod,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'INJ'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdgross_liq_prod::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdgross_liq_prod::numeric
+            END), 2)
+        END AS log_cdgross_liq_prod,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'PROD'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdwat_inj::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdwat_inj::numeric
+            END), 2)
+        END AS log_cdwat_inj,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'PROD'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdgas_inj::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdgas_inj::numeric
+            END), 2)
+        END AS log_cdgas_inj,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'PROD'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdsteam_inj::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdsteam_inj::numeric
+            END), 2)
+        END AS log_cdseam_inj,
+        CASE
+            WHEN strpos(mv_dv_av_allocated_cals.currenttype, 'PROD'::text) > 0 THEN NULL::numeric
+            ELSE round(log(
+            CASE
+                WHEN mv_dv_av_allocated_cals.cdsteamc_inj::numeric <= 0::numeric THEN NULL::numeric
+                ELSE mv_dv_av_allocated_cals.cdsteamc_inj::numeric
+            END), 2)
+        END AS log_cdseamc_inj,
+    concat(round(mv_dv_av_allocated_cals.cdoil_prod::numeric, 0), '/', round(mv_dv_av_allocated_cals.cdwat_prod::numeric, 0), '/', round(mv_dv_av_allocated_cals.cdgas_prod::numeric, 0)) AS owg_lable
+   FROM surv.mv_dv_av_allocated_cals;
+
+-- Permissions
+
+ALTER TABLE surv.old_fv_allocated_volumes OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_fv_allocated_volumes TO postgres;
+GRANT SELECT ON TABLE surv.old_fv_allocated_volumes TO web_anon;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_fv_allocated_volumes TO data_quality;
