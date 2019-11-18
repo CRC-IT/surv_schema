@@ -1,0 +1,42 @@
+CREATE OR REPLACE VIEW surv.old_fv_surv_well_notes
+AS WITH notes AS (
+         SELECT
+                CASE
+                    WHEN wn.api_no14 IS NULL THEN
+                    CASE
+                        WHEN wc.api_no14 IS NULL THEN wc2.api_no14
+                        ELSE wc.api_no14
+                    END
+                    ELSE wn.api_no14
+                END AS api_no14,
+            wn.well_name,
+            wn.comment_date,
+            wn.comment_by,
+            wn.source,
+            wn.comments
+           FROM bi.fv_well_notes wn
+             LEFT JOIN crc.bi_wellcomp wc ON wc.automation_name = wn.well_name
+             LEFT JOIN crc.bi_wellcomp wc2 ON wn.well_name = wc2.wellcomp_name
+        )
+ SELECT cc.api_no14,
+    cc.well_name,
+    ii.comment_date,
+    cc.op_area,
+    cc.reg_name,
+    cc.at_name,
+    cc.orglev4_name,
+    cc.currenttype,
+    cc.currentstatus,
+    ii.comment_by,
+    ii.source,
+    ii.comments,
+    1::numeric AS marker_notes
+   FROM notes ii
+     JOIN surv.mv_dv_wd_well_dictionary cc ON ii.api_no14 = cc.api_no14;
+
+-- Permissions
+
+ALTER TABLE surv.old_fv_surv_well_notes OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_fv_surv_well_notes TO postgres;
+GRANT SELECT ON TABLE surv.old_fv_surv_well_notes TO web_anon;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_fv_surv_well_notes TO data_quality;
