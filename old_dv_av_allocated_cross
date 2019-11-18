@@ -1,0 +1,21 @@
+CREATE OR REPLACE VIEW surv.old_dv_av_allocated_cross
+AS WITH last_dates AS (
+         SELECT DISTINCT date_trunc('MONTH'::text, site_specific_elk_hills_daily_dates.full_date) + '1 mon'::interval - '1 day'::interval AS full_date
+           FROM ds_ekpspp.site_specific_elk_hills_daily_dates
+        ), well_list AS (
+         SELECT DISTINCT mv_bi_monthly_volumes.api_no14,
+            max(mv_bi_monthly_volumes.prod_inj_date) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14) AS max_date,
+            min(mv_bi_monthly_volumes.prod_inj_date) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14) AS min_date
+           FROM crc.mv_bi_monthly_volumes
+        )
+ SELECT DISTINCT well_list.api_no14,
+    last_dates.full_date
+   FROM last_dates
+     CROSS JOIN well_list
+  WHERE last_dates.full_date <= well_list.max_date AND last_dates.full_date >= well_list.min_date;
+
+-- Permissions
+
+ALTER TABLE surv.old_dv_av_allocated_cross OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_dv_av_allocated_cross TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_dv_av_allocated_cross TO data_quality;
