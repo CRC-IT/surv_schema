@@ -1,0 +1,72 @@
+CREATE OR REPLACE VIEW surv.old_dv_av_allocated_zeros
+AS SELECT aa.api_no14,
+    aa.full_date AS prod_inj_date,
+        CASE
+            WHEN vv.days_prod IS NULL THEN 0::double precision
+            ELSE vv.days_prod
+        END AS days_prod,
+        CASE
+            WHEN vv.days_inject IS NULL THEN 0::double precision
+            ELSE vv.days_inject
+        END AS days_inject,
+        CASE
+            WHEN vv.oil_prod IS NULL THEN 0::numeric::real
+            ELSE vv.oil_prod
+        END AS oil_prod,
+        CASE
+            WHEN vv.owg_prod IS NULL THEN 0::numeric::real
+            ELSE vv.owg_prod
+        END AS owg_prod,
+        CASE
+            WHEN vv.gwg_prod IS NULL THEN 0::numeric::real
+            ELSE vv.gwg_prod
+        END AS gwg_prod,
+        CASE
+            WHEN vv.cond_prod IS NULL THEN 0::numeric::real
+            ELSE vv.cond_prod
+        END AS cond_prod,
+        CASE
+            WHEN vv.water_prod IS NULL THEN 0::numeric::real
+            ELSE vv.water_prod
+        END AS water_prod,
+        CASE
+            WHEN vv.nitrogen_prod IS NULL THEN 0::numeric::real
+            ELSE vv.nitrogen_prod
+        END AS nitrogen_prod,
+        CASE
+            WHEN vv.water_inj IS NULL THEN 0::numeric::real
+            ELSE vv.water_inj
+        END AS water_inj,
+        CASE
+            WHEN vv.gas_inj IS NULL THEN 0::numeric::real
+            ELSE vv.gas_inj
+        END AS gas_inj,
+        CASE
+            WHEN vv.disp_water_inj IS NULL THEN 0::numeric::real
+            ELSE vv.disp_water_inj
+        END AS disp_water_inj,
+        CASE
+            WHEN vv.cyclic_steam_inj IS NULL THEN 0::numeric::real
+            ELSE vv.cyclic_steam_inj
+        END AS cyclic_steam_inj,
+        CASE
+            WHEN vv.steam_inj IS NULL THEN 0::numeric::real
+            ELSE vv.steam_inj
+        END AS steam_inj,
+        CASE
+            WHEN vv.hrs_prod IS NULL THEN 0::numeric
+            ELSE vv.hrs_prod
+        END AS hrs_prod,
+        CASE
+            WHEN vv.hrs_inject IS NULL THEN 0::numeric
+            ELSE vv.hrs_inject
+        END AS hrs_inject
+   FROM surv.mv_dv_av_allocated_cross aa
+     LEFT JOIN crc.mv_bi_monthly_volumes vv ON aa.api_no14 = vv.api_no14 AND date_trunc('day'::text, aa.full_date) = date_trunc('day'::text, date_trunc('MONTH'::text, vv.prod_inj_date) + '1 mon'::interval - '1 day'::interval);
+
+-- Permissions
+
+ALTER TABLE surv.old_dv_av_allocated_zeros OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_dv_av_allocated_zeros TO postgres;
+GRANT SELECT ON TABLE surv.old_dv_av_allocated_zeros TO web_anon;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_dv_av_allocated_zeros TO data_quality;
