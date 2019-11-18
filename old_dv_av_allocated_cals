@@ -1,0 +1,133 @@
+CREATE OR REPLACE VIEW surv.old_dv_av_allocated_cals
+AS SELECT DISTINCT cc.api_no14,
+    cc.well_name,
+    pt.prod_inj_date AS allocated_date,
+    cc.op_area,
+    cc.reg_name,
+    cc.at_name,
+    cc.orglev4_name,
+    cc.currenttype,
+    cc.currentstatus,
+    pt.days_prod,
+    pt.days_inject,
+    pt.oil_prod,
+    COALESCE(pt.gwg_prod, 0::numeric::real) + COALESCE(pt.owg_prod, 0::numeric::real) + COALESCE(pt.nitrogen_prod, 0::numeric::real) AS gas_prod,
+    pt.cond_prod,
+    pt.water_prod,
+    COALESCE(pt.oil_prod, 0::numeric::real) + COALESCE(pt.water_prod, 0::numeric::real) AS gross_liq_prod,
+    pt.water_inj,
+    pt.gas_inj,
+    pt.disp_water_inj,
+    pt.cyclic_steam_inj,
+    pt.steam_inj,
+    pt.hrs_prod,
+    pt.hrs_inject,
+        CASE
+            WHEN pt.oil_prod = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.oil_prod / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdoil_prod,
+        CASE
+            WHEN (COALESCE(pt.oil_prod, 0::numeric::real) + COALESCE(pt.water_prod, 0::numeric::real)) = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE (COALESCE(pt.oil_prod, 0::numeric::real) + COALESCE(pt.water_prod, 0::numeric::real)) / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdgross_liq_prod,
+        CASE
+            WHEN pt.cond_prod = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.cond_prod / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdcond_prod,
+        CASE
+            WHEN (pt.gwg_prod + pt.owg_prod + pt.nitrogen_prod) = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE (pt.gwg_prod + pt.owg_prod + pt.nitrogen_prod) / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdgas_prod,
+        CASE
+            WHEN pt.water_prod = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.water_prod / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdwat_prod,
+        CASE
+            WHEN pt.gas_inj = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.gas_inj / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdgas_inj,
+        CASE
+            WHEN pt.water_inj = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.water_inj / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdwat_inj,
+        CASE
+            WHEN pt.cyclic_steam_inj = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.cyclic_steam_inj / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdsteam_inj,
+        CASE
+            WHEN pt.steam_inj = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.steam_inj / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cdsteamc_inj,
+        CASE
+            WHEN pt.disp_water_inj = 0::numeric::double precision OR date_part('day'::text, pt.prod_inj_date)::numeric = 0::numeric THEN 0::numeric::double precision
+            ELSE pt.disp_water_inj / date_part('day'::text, pt.prod_inj_date)::numeric::double precision
+        END AS cddispwat_inj,
+        CASE
+            WHEN (COALESCE(pt.gwg_prod, 0::numeric::real) + COALESCE(pt.owg_prod, 0::numeric::real) + COALESCE(pt.nitrogen_prod, 0::numeric::real)) = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round(pt.oil_prod::numeric / (COALESCE(pt.gwg_prod::numeric, 0::numeric) + COALESCE(pt.owg_prod::numeric, 0::numeric) + COALESCE(pt.nitrogen_prod::numeric, 0::numeric)), 3), 0::numeric)
+        END AS ogr_prod,
+        CASE
+            WHEN (pt.oil_prod + pt.water_prod) = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round(pt.oil_prod::numeric / (pt.oil_prod::numeric + pt.water_prod::numeric) * 100::numeric, 3), 0::numeric)
+        END AS ocut_prod,
+        CASE
+            WHEN (pt.oil_prod + pt.water_prod) = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round((COALESCE(pt.gwg_prod::numeric, 0::numeric) + COALESCE(pt.owg_prod::numeric, 0::numeric) + COALESCE(pt.nitrogen_prod::numeric, 0::numeric)) / (pt.oil_prod::numeric + pt.water_prod::numeric), 3), 0::numeric)
+        END AS glr_prod,
+        CASE
+            WHEN pt.oil_prod = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round((COALESCE(pt.gwg_prod::numeric, 0::numeric) + COALESCE(pt.owg_prod::numeric, 0::numeric) + COALESCE(pt.nitrogen_prod::numeric, 0::numeric)) / pt.oil_prod::numeric, 3), 0::numeric)
+        END AS gor_prod,
+        CASE
+            WHEN pt.oil_prod = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round(pt.water_prod::numeric / pt.oil_prod::numeric, 3), 0::numeric)
+        END AS wor_prod,
+        CASE
+            WHEN (COALESCE(pt.gwg_prod, 0::numeric::real) + COALESCE(pt.owg_prod, 0::numeric::real) + COALESCE(pt.nitrogen_prod, 0::numeric::real)) = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round(pt.water_prod::numeric / (COALESCE(pt.gwg_prod::numeric, 0::numeric) + COALESCE(pt.owg_prod::numeric, 0::numeric) + COALESCE(pt.nitrogen_prod::numeric, 0::numeric)), 3), 0::numeric)
+        END AS wgr_prod,
+        CASE
+            WHEN (pt.oil_prod + pt.water_prod) = 0::numeric::double precision THEN 0::numeric
+            ELSE COALESCE(round(pt.water_prod::numeric / (pt.oil_prod::numeric + pt.water_prod::numeric) * 100::numeric, 3), 0::numeric)
+        END AS water_cut_prod,
+        CASE
+            WHEN (pt.oil_prod + pt.water_prod + pt.gwg_prod + pt.owg_prod + pt.cond_prod + pt.nitrogen_prod) = 0::numeric::double precision THEN 0::numeric
+            ELSE 1::numeric
+        END AS active_prod,
+        CASE
+            WHEN pt.water_inj = 0::numeric::double precision THEN 0::numeric
+            ELSE 1::numeric
+        END AS active_winj,
+        CASE
+            WHEN pt.gas_inj = 0::numeric::double precision THEN 0::numeric
+            ELSE 1::numeric
+        END AS active_ginj,
+        CASE
+            WHEN pt.steam_inj = 0::numeric::double precision THEN 0::numeric
+            ELSE 1::numeric
+        END AS active_steam_inj,
+        CASE
+            WHEN pt.cyclic_steam_inj = 0::numeric::double precision THEN 0::numeric
+            ELSE 1::numeric
+        END AS active_steamc_inj,
+        CASE
+            WHEN pt.disp_water_inj = 0::numeric::double precision THEN 0::numeric
+            ELSE 1::numeric
+        END AS active_wd,
+    sum(pt.oil_prod) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS oil_cum,
+    sum(COALESCE(pt.gwg_prod, 0::numeric::real) + COALESCE(pt.owg_prod, 0::numeric::real) + COALESCE(pt.nitrogen_prod, 0::numeric::real)) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS gas_cum,
+    sum(pt.water_prod + pt.oil_prod) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS gross_cum,
+    sum(pt.water_prod) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS water_cum,
+    sum(pt.water_inj) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS water_inj_cum,
+    sum(pt.gas_inj) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS gas_inj_cum,
+    sum(pt.steam_inj) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS steam_inj_cum,
+    sum(pt.cyclic_steam_inj) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS steamc_inj_cum,
+    sum(pt.disp_water_inj) OVER (PARTITION BY pt.api_no14 ORDER BY pt.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS disp_water_inj_cum
+   FROM surv.mv_dv_av_allocated_volume_zeros pt
+     JOIN surv.mv_dv_wd_well_dictionary cc ON cc.api_no14 = pt.api_no14;
+
+-- Permissions
+
+ALTER TABLE surv.old_dv_av_allocated_cals OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_dv_av_allocated_cals TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_dv_av_allocated_cals TO data_quality;
