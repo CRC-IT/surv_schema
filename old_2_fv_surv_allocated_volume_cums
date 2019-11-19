@@ -1,0 +1,19 @@
+CREATE OR REPLACE VIEW surv.old_2_fv_surv_allocated_volume_cums
+AS SELECT mv_bi_monthly_volumes.api_no14,
+    mv_bi_monthly_volumes.prod_inj_date AS allocated_date,
+    sum(mv_bi_monthly_volumes.oil_prod) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS oil_cum,
+    sum(COALESCE(mv_bi_monthly_volumes.gwg_prod, 0::numeric::real) + COALESCE(mv_bi_monthly_volumes.owg_prod, 0::numeric::real) + COALESCE(mv_bi_monthly_volumes.nitrogen_prod, 0::numeric::real)) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS gas_cum,
+    sum(mv_bi_monthly_volumes.water_prod + mv_bi_monthly_volumes.oil_prod) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS gross_cum,
+    sum(mv_bi_monthly_volumes.water_prod) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS water_cum,
+    sum(mv_bi_monthly_volumes.water_inj) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS water_inj_cum,
+    sum(mv_bi_monthly_volumes.gas_inj) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS gas_inj_cum,
+    sum(mv_bi_monthly_volumes.steam_inj) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS steam_inj_cum,
+    sum(mv_bi_monthly_volumes.cyclic_steam_inj) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS steamc_inj_cum,
+    sum(mv_bi_monthly_volumes.disp_water_inj) OVER (PARTITION BY mv_bi_monthly_volumes.api_no14 ORDER BY mv_bi_monthly_volumes.prod_inj_date RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS disp_water_inj_cum
+   FROM crc.mv_bi_monthly_volumes;
+
+-- Permissions
+
+ALTER TABLE surv.old_2_fv_surv_allocated_volume_cums OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_2_fv_surv_allocated_volume_cums TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_2_fv_surv_allocated_volume_cums TO data_quality;
