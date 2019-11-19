@@ -1,0 +1,14 @@
+CREATE OR REPLACE VIEW surv.old_2_fv_surv_well_events
+AS SELECT DISTINCT ww.api_no14,
+    ee.date_ops_end AS event_date,
+    'OpenWells Events'::text AS source,
+    concat(COALESCE(upper(ee.event_type), ''::text), ' -- ', COALESCE(upper(ee.event_objective_1), ''::text), ' ', COALESCE(upper(ee.event_objective_2), ''::text)) AS comments
+   FROM bi.fv_wellcomp ww
+     JOIN crc_edm.u_dm_event_t ee ON ww.well_id = ee.well_id
+  WHERE ee.date_ops_end IS NOT NULL AND ee.event_type IS NOT NULL;
+
+-- Permissions
+
+ALTER TABLE surv.old_2_fv_surv_well_events OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_2_fv_surv_well_events TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_2_fv_surv_well_events TO data_quality;
