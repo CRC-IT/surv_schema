@@ -1,0 +1,42 @@
+CREATE OR REPLACE VIEW surv.old_2_fv_surv_well_test
+AS SELECT DISTINCT ii.api_no14,
+    ii.well_test_date AS test_date,
+    mm.last_test_date,
+    ii.test_type,
+    ii.oil_rate,
+    ii.gas_rate,
+    ii.water_rate,
+    ii.gas_lift_rate,
+    ii.gas_oil_ratio,
+    ii.tubing_press,
+    ii.casing_press,
+    ii.line_press,
+    ii.allocatable,
+    ii.oil_gravity,
+    ii.choke_size,
+    ii.pump_eff,
+    ii.water_cut,
+    ii.stroke_length,
+    ii.strokes_minute,
+    ii.pump_bore_size,
+    ii.prod_hours,
+    ii.test_hours,
+    ii.hertz,
+    ii.amps,
+    ii.fluid_level,
+    ii.pump_intake_press,
+    ii.wellhead_temp,
+    ii.salinity,
+    ii.bsw
+   FROM crc.mv_bi_well_test ii
+     JOIN crc.bi_wellcomp_v cc ON ii.api_no14 = cc.api_no14
+     JOIN ( SELECT mv_bi_well_test.api_no14,
+            max(mv_bi_well_test.well_test_date) AS last_test_date
+           FROM crc.mv_bi_well_test
+          GROUP BY mv_bi_well_test.api_no14) mm ON ii.api_no14 = mm.api_no14;
+
+-- Permissions
+
+ALTER TABLE surv.old_2_fv_surv_well_test OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_2_fv_surv_well_test TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_2_fv_surv_well_test TO data_quality;
