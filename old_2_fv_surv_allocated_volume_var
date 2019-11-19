@@ -1,0 +1,18 @@
+CREATE OR REPLACE VIEW surv.old_2_fv_surv_allocated_volume_var
+AS SELECT avc.api_no14,
+    avc.allocated_date,
+    avc.cdoil_prod - COALESCE(lag(avc.cdoil_prod) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdoil_prod_var,
+    avc.cdgas_prod - COALESCE(lag(avc.cdgas_prod) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdgas_prod_var,
+    avc.cdwater_prod - COALESCE(lag(avc.cdwater_prod) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdwat_prod_var,
+    avc.cdgross_liq_prod - COALESCE(lag(avc.cdgross_liq_prod) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdgross_liq_prod_var,
+    avc.cdwater_inj - COALESCE(lag(avc.cdwater_inj) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdwat_inj_var,
+    avc.cdgas_inj - COALESCE(lag(avc.cdgas_inj) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdgas_inj_var,
+    avc.cdsteam_inj - COALESCE(lag(avc.cdsteam_inj) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdsteam_inj_var,
+    avc.cdsteamc_inj - COALESCE(lag(avc.cdsteamc_inj) OVER (PARTITION BY avc.api_no14 ORDER BY avc.allocated_date)::double precision, 0::numeric::double precision) AS cdsteamc_inj_var
+   FROM surv.fv_surv_allocated_volume_calcs avc;
+
+-- Permissions
+
+ALTER TABLE surv.old_2_fv_surv_allocated_volume_var OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_2_fv_surv_allocated_volume_var TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_2_fv_surv_allocated_volume_var TO data_quality;
