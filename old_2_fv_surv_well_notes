@@ -1,0 +1,31 @@
+CREATE OR REPLACE VIEW surv.old_2_fv_surv_well_notes
+AS SELECT DISTINCT
+        CASE
+            WHEN wn.api_no14 IS NULL THEN
+            CASE
+                WHEN wc.api_no14 IS NULL THEN wc2.api_no14
+                ELSE wc.api_no14
+            END
+            ELSE wn.api_no14
+        END AS api_no14,
+    wn.comment_date,
+    wn.comment_by,
+    wn.source,
+    wn.comments,
+    md.mindate,
+    md.maxdate
+   FROM crc.mv_bi_well_notes wn
+     LEFT JOIN crc.bi_wellcomp wc ON wc.automation_name = wn.well_name
+     LEFT JOIN crc.bi_wellcomp wc2 ON wn.well_name = wc2.wellcomp_name
+     LEFT JOIN ( SELECT mv_bi_monthly_volumes.api_no14,
+            min(mv_bi_monthly_volumes.prod_inj_date) AS mindate,
+            max(mv_bi_monthly_volumes.prod_inj_date) AS maxdate
+           FROM crc.mv_bi_monthly_volumes
+          GROUP BY mv_bi_monthly_volumes.api_no14) md ON md.api_no14 = wn.api_no14
+  WHERE wn.api_no14 IS NOT NULL AND wn.comment_date IS NOT NULL AND md.mindate IS NOT NULL AND md.maxdate IS NOT NULL AND wn.comment_date >= md.mindate AND wn.comment_date <= md.maxdate;
+
+-- Permissions
+
+ALTER TABLE surv.old_2_fv_surv_well_notes OWNER TO postgres;
+GRANT ALL ON TABLE surv.old_2_fv_surv_well_notes TO postgres;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE surv.old_2_fv_surv_well_notes TO data_quality;
